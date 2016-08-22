@@ -101,5 +101,5 @@ func init() {
 
 	orm.RegisterDataBase("datahub", "mysql", connstr, 30)
 
-	orm.RunSyncdb("default", false, true)
+	orm.RunSyncdb("datahub", false, true)
 }
