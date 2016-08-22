@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	_ "datahub_custom/logs"
-	"datahub_custom/models"
+	_ "github.com/asiainfoLDP/datahub_custom/logs"
+	"github.com/asiainfoLDP/datahub_custom/models"
 	"encoding/json"
 	"github.com/astaxie/beego"
 	"strings"

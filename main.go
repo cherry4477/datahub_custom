@@ -1,8 +1,8 @@
 package main
 
 import (
-	_ "datahub_custom/docs"
-	_ "datahub_custom/routers"
+	_ "github.com/asiainfoLDP/datahub_custom/docs"
+	_ "github.com/asiainfoLDP/datahub_custom/routers"
 
 	"github.com/astaxie/beego"
 )

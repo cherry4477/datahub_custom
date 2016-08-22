@@ -8,7 +8,7 @@
 package routers
 
 import (
-	"datahub_custom/controllers"
+	"github.com/asiainfoLDP/datahub_custom/controllers"
 	"github.com/astaxie/beego"
 )
 

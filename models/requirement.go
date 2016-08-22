@@ -6,7 +6,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	//"github.com/astaxie/beego/config"
 	"database/sql"
-	"datahub_custom/conf"
+	"github.com/asiainfoLDP/datahub_custom/conf"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 )
