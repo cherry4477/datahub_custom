@@ -1,0 +1,19 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "w6P/r6p4DW1avCgZGHxq4x1wiXI=",
+			"path": "datahub_custom",
+			"revision": "3b0d2b4a67469d5deeb3a9cd1fd99b75c4e6ee92",
+			"revisionTime": "2016-08-22T08:40:08Z"
+		},
+		{
+			"checksumSHA1": "wjMOkQePdr7qHD9RXHuKcSOcJZE=",
+			"path": "github.com/astaxie/beego",
+			"revision": "88c5dfa6ead42e624c2e7d9e04eab6cb2d07412a",
+			"revisionTime": "2016-03-23T09:05:40Z"
+		}
+	],
+	"rootPath": "datahub_custom"
+}
