@@ -97,7 +97,7 @@ func init() {
 
 	beego.Debug(mysqlUser, mysqlPassword, mysqlDatabase)
 
-	connstr := mysqlUser + ":" + mysqlPassword + "@tcp(10.1.235.98)/" + mysqlDatabase + "?charset=utf8"
+	connstr := mysqlUser + ":" + mysqlPassword + "@tcp(10.1.235.98:3388)/" + mysqlDatabase + "?charset=utf8"
 
 	orm.RegisterDataBase("datahub", "mysql", connstr, 30)
 
