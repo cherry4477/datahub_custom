@@ -101,5 +101,5 @@ func init() {
 
 	orm.RegisterDataBase("default", "mysql", connstr, 30)
 
-	orm.RunSyncdb("requirement", false, true)
+	orm.RunSyncdb("default", false, true)
 }
