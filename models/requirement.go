@@ -99,7 +99,7 @@ func init() {
 
 	connstr := mysqlUser + ":" + mysqlPassword + "@tcp(10.1.235.98:3388)/" + mysqlDatabase + "?charset=utf8"
 
-	orm.RegisterDataBase("datahub", "mysql", connstr, 30)
+	orm.RegisterDataBase("default", "mysql", connstr, 30)
 
 	orm.RunSyncdb("requirement", false, true)
 }
