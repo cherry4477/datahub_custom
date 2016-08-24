@@ -1,40 +1,37 @@
 package models
 
 import (
-	//"database/sql"
-
-	_ "github.com/go-sql-driver/mysql"
-	//"github.com/astaxie/beego/config"
-	"database/sql"
 	"github.com/asiainfoLDP/datahub_custom/conf"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
-	Requirements  map[string]*Requirement
 	mysqlUser     string
 	mysqlPassword string
 	mysqlDatabase string
-
-	db *sql.DB
+	mysqlUrl      string
 )
 
-func AddOne(requirement Requirement) int64 {
+func AddOne(requirement Requirement) (int64, error) {
 	o := orm.NewOrm()
-
+	o.Using("datahub")
+	requirement.Status = "A"
 
 	id, err := o.Insert(&requirement)
 	if err != nil {
-		beego.Error(err)
+		return 0, err
 	}
 	beego.Debug(id)
 
-	return id
+	return id, err
 }
 
 func Get(params map[string]string) []*Requirement {
 	o := orm.NewOrm()
+	o.Using("datahub")
+
 	var requirements []*Requirement
 	qs := o.QueryTable("requirement")
 
@@ -61,8 +58,20 @@ func Get(params map[string]string) []*Requirement {
 	return requirements
 }
 
+func GetById(id int) Requirement {
+	o := orm.NewOrm()
+	o.Using("datahub")
+
+	requirement := Requirement{Id: id}
+
+	o.Read(&requirement)
+
+	return requirement
+}
+
 func GetAll() []*Requirement {
 	o := orm.NewOrm()
+	o.Using("datahub")
 
 	var requirements []*Requirement
 	_, err := o.QueryTable("requirement").All(&requirements)
@@ -76,6 +85,8 @@ func GetAll() []*Requirement {
 
 func Update(req Requirement) {
 	o := orm.NewOrm()
+	o.Using("datahub")
+
 	_, err := o.Update(&req)
 	checkErr(err)
 }
@@ -94,10 +105,11 @@ func init() {
 	mysqlUser = conf.GetMysqlUser()
 	mysqlPassword = conf.GetMysqlPassword()
 	mysqlDatabase = conf.GetMysqlDatabase()
+	mysqlUrl = conf.GetMysqlUrl()
 
 	beego.Debug(mysqlUser, mysqlPassword, mysqlDatabase)
 
-	connstr := mysqlUser + ":" + mysqlPassword + "@tcp(10.1.235.98:3388)/" + mysqlDatabase + "?charset=utf8"
+	connstr := mysqlUser + ":" + mysqlPassword + "@tcp(" + mysqlUrl + ")/" + mysqlDatabase + "?charset=utf8&loc=Asia%2FShanghai"
 
 	orm.RegisterDataBase("default", "mysql", connstr, 30)
 

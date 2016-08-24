@@ -1,15 +1,16 @@
 package controllers
 
 import (
+	"encoding/json"
+	"github.com/asiainfoLDP/datahub_custom/ds"
 	_ "github.com/asiainfoLDP/datahub_custom/logs"
 	"github.com/asiainfoLDP/datahub_custom/models"
-	"encoding/json"
 	"github.com/astaxie/beego"
-	"strings"
+	"net/http"
 	"strconv"
+	"strings"
 )
 
-// Operations about object
 type ARequirementController struct {
 	beego.Controller
 }
@@ -25,9 +26,9 @@ type DRequirementController struct {
 // @Failure 403 body is empty
 // @router / [post]
 func (this *ARequirementController) Post() {
-	beego.Informational(this.Ctx.Request.URL, "admin add a requirement.")
+	beego.Informational(this.Ctx.Request.URL, "Admin create a requirement.")
 
-	//this.auth()
+	this.auth()
 
 	var object models.Requirement
 	json.Unmarshal(this.Ctx.Input.RequestBody, &object)
@@ -46,7 +47,7 @@ func (this *ARequirementController) Post() {
 // @Failure 403 :objectId is empty
 // @router /requirement [get]
 func (this *ARequirementController) Get() {
-	beego.Informational(this.Ctx.Request.URL, "get requirements by params.")
+	beego.Informational(this.Ctx.Request.URL, "Admin get requirements by params.")
 
 	//this.auth()
 
@@ -77,7 +78,7 @@ func (this *ARequirementController) Get() {
 // @Failure 403 :objectId is empty
 // @router / [get]
 func (this *ARequirementController) GetAll() {
-	beego.Informational(this.Ctx.Request.URL, "get all requirement.")
+	beego.Informational(this.Ctx.Request.URL, "Admin get all requirement.")
 
 	this.auth()
 
@@ -94,11 +95,15 @@ func (this *ARequirementController) GetAll() {
 // @Failure 403 :objectId is empty
 // @router /:reqId [put]
 func (this *ARequirementController) Put() {
-	beego.Informational(this.Ctx.Request.URL, "Update a requirement.")
+	beego.Informational(this.Ctx.Request.URL, "Admin update a requirement.")
 
 	reqId := this.Ctx.Input.Param(":reqId")
 
 	var object models.Requirement
+
+	id, _ := strconv.Atoi(reqId)
+
+	object = models.GetById(id)
 	err := json.Unmarshal(this.Ctx.Input.RequestBody, &object)
 	beego.Debug(string(this.Ctx.Input.RequestBody))
 	if err != nil {
@@ -106,7 +111,7 @@ func (this *ARequirementController) Put() {
 	}
 	beego.Debug(object)
 
-	object.ReqId, _ = strconv.Atoi(reqId)
+	object.Id, _ = strconv.Atoi(reqId)
 	models.Update(object)
 	beego.Debug(object)
 	this.ServeJSON()
@@ -125,6 +130,26 @@ func (o *ARequirementController) Delete() {
 	//o.ServeJSON()
 }
 
+//@router / [post]
+func (this *DRequirementController) Post() {
+	beego.Informational(this.Ctx.Request.URL, "Datahub create a requirement.")
+
+	var object models.Requirement
+	err := json.Unmarshal(this.Ctx.Input.RequestBody, &object)
+	if err != nil {
+		beego.Error("Unmarshal err :", err)
+		this.SendResult(http.StatusBadRequest, ds.ErrorUnmarshal, "Internal Error.", nil)
+	}
+	beego.Debug(object)
+	_, err = models.AddOne(object)
+	if err != nil {
+		beego.Error("models, addone err :", err)
+		this.SendResult(http.StatusBadRequest, ds.ErrorAddModel, err.Error(), nil)
+	}
+
+	this.SendResult(http.StatusOK, ds.ResultOK, "OK.", nil)
+}
+
 func (this *ARequirementController) auth() {
 	loginName := this.Ctx.Request.Header.Get("User")
 	loginName = strings.Split(loginName, "+")[0]
@@ -132,4 +157,21 @@ func (this *ARequirementController) auth() {
 		beego.Notice("not authorized.")
 		this.Abort("401")
 	}
+}
+
+func (this *DRequirementController) auth() {
+	loginName := this.Ctx.Request.Header.Get("User")
+	loginName = strings.Split(loginName, "+")[0]
+	if loginName != "datahub" || loginName == "" {
+		beego.Notice("not authorized.")
+		this.SendResult(http.StatusUnauthorized, ds.ErrorUnauthorized, "not authorized.", nil)
+	}
+}
+
+func (this *DRequirementController) SendResult(statusCode int, code int, msg string, data interface{}) {
+	this.Ctx.Output.SetStatus(statusCode)
+	result := ds.Result{Code: code, Msg: msg, Data: data}
+
+	this.Data["json"] = &result
+	this.ServeJSON()
 }

@@ -19,3 +19,7 @@ func GetMysqlPassword() string {
 func GetMysqlDatabase() string {
 	return iniConfig.String("MysqlDatabase")
 }
+
+func GetMysqlUrl() string {
+	return iniConfig.String("MysqlUrl")
+}

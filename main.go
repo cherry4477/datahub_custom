@@ -5,6 +5,7 @@ import (
 	_ "github.com/asiainfoLDP/datahub_custom/routers"
 
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/orm"
 )
 
 func main() {
@@ -12,5 +13,6 @@ func main() {
 		beego.BConfig.WebConfig.DirectoryIndex = true
 		beego.BConfig.WebConfig.StaticDir["/swagger"] = "swagger"
 	}
+	orm.Debug = true
 	beego.Run()
 }
