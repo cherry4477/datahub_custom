@@ -114,4 +114,6 @@ func init() {
 	orm.RegisterDataBase("default", "mysql", connstr, 30)
 
 	orm.RunSyncdb("default", false, true)
+
+	//
 }

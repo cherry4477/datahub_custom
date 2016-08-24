@@ -138,7 +138,7 @@ func (this *DRequirementController) Post() {
 	err := json.Unmarshal(this.Ctx.Input.RequestBody, &object)
 	if err != nil {
 		beego.Error("Unmarshal err :", err)
-		this.SendResult(http.StatusBadRequest, ds.ErrorUnmarshal, "Internal Error.", nil)
+		this.SendResult(http.StatusBadRequest, ds.ErrorUnmarshal, err.Error(), nil)
 	}
 	beego.Debug(object)
 	_, err = models.AddOne(object)

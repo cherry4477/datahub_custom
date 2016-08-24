@@ -12,6 +12,7 @@ type Requirement struct {
 	Email               string    `orm:"size(64)" json:"email"`
 	Company             string    `orm:"size(64)" json:"company"`
 	Requirement_content string    `orm:"type(text)" json:"requirementContent"`
+	Create_user         string    `orm:"size(32)" json:"createUser, omitempty"`
 	Requirement_name    string    `orm:"size(64)" json:"requirementName, omitempty"`
 	Attribute           string    `orm:"size(2)" json:"attribute, omitempty"`
 	Resourcemap         string    `orm:"size(2)" json:"resourcemap, omitempty"`
