@@ -18,6 +18,7 @@ type Requirement struct {
 	Resourcemap         string    `orm:"size(2)" json:"resourcemap, omitempty"`
 	Trade               string    `orm:"size(64)" json:"trade, omitempty"`
 	Scope               string    `orm:"size(64)" json:"scope, omitempty"`
+	Scene               string    `orm:"size(64)" json:"scene, omitempty"`
 	Frequency           string    `orm:"size(64)" json:"frequency, omitempty"`
 	Deliver             string    `orm:"size(64)" json:"deliver, omitempty"`
 	Priority            string    `orm:"size(8)" json:"priority, omitempty"`

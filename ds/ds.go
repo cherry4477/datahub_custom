@@ -2,7 +2,7 @@ package ds
 
 const (
 	ResultOK          = 0
-	ErrorUnauthorized = iota + 4000
+	ErrorUnauthorized = iota + 6000
 	ErrorUnmarshal
 	ErrorAddModel
 	ErrorGetModel

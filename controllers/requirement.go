@@ -193,7 +193,7 @@ func (this *DRequirementController) Get() {
 func (this *ERequirementController) auth() {
 	loginStr := this.Ctx.Request.Header.Get("User")
 	region := strings.Split(loginStr, "+")[0]
-	if region == ""  || region == "datahub" {
+	if region == "" || region == "datahub" {
 		beego.Notice("not authorized.")
 		sendResult(this.Controller, http.StatusUnauthorized, ds.ErrorUnauthorized, "not authorized.", nil)
 	}
