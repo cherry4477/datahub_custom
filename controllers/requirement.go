@@ -134,7 +134,12 @@ func (o *ARequirementController) Delete() {
 func (this *DRequirementController) Post() {
 	beego.Informational(this.Ctx.Request.URL, "Datahub create a requirement.")
 
+	loginName := getLoginName(this.Controller)
 	var object models.Requirement
+	if loginName != "" {
+		object.Create_user = loginName
+	}
+
 	err := json.Unmarshal(this.Ctx.Input.RequestBody, &object)
 	if err != nil {
 		beego.Error("Unmarshal err :", err)
@@ -151,18 +156,18 @@ func (this *DRequirementController) Post() {
 }
 
 func (this *ARequirementController) auth() {
-	loginName := this.Ctx.Request.Header.Get("User")
-	loginName = strings.Split(loginName, "+")[0]
-	if loginName == "datahub" || loginName == "" {
+	loginStr := this.Ctx.Request.Header.Get("User")
+	region := strings.Split(loginStr, "+")[0]
+	if region == ""  || region == "datahub" {
 		beego.Notice("not authorized.")
 		this.Abort("401")
 	}
 }
 
 func (this *DRequirementController) auth() {
-	loginName := this.Ctx.Request.Header.Get("User")
-	loginName = strings.Split(loginName, "+")[0]
-	if loginName != "datahub" || loginName == "" {
+	loginStr := this.Ctx.Request.Header.Get("User")
+	region := strings.Split(loginStr, "+")[0]
+	if region == "" || region != "datahub" {
 		beego.Notice("not authorized.")
 		this.SendResult(http.StatusUnauthorized, ds.ErrorUnauthorized, "not authorized.", nil)
 	}
@@ -174,4 +179,14 @@ func (this *DRequirementController) SendResult(statusCode int, code int, msg str
 
 	this.Data["json"] = &result
 	this.ServeJSON()
+}
+
+func getLoginName(this beego.Controller) string {
+	loginStr := this.Ctx.Request.Header.Get("User")
+	if loginStr == "" {
+		return ""
+	}
+	loginName := strings.Split(loginStr, "+")[1]
+
+	return loginName
 }
