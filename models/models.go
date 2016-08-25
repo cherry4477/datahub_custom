@@ -6,7 +6,7 @@ import (
 )
 
 type Requirement struct {
-	Id                  int       `orm:"auto;pk" json:"omitempty"`
+	Id                  int       `orm:"auto;pk" json:"id, omitempty"`
 	Name                string    `orm:"size(64)" json:"name"`
 	Phone               string    `orm:"size(20)" json:"phone"`
 	Email               string    `orm:"size(64)" json:"email"`

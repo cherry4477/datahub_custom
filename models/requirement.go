@@ -28,15 +28,17 @@ func AddOne(requirement Requirement) (int64, error) {
 	return id, err
 }
 
-func Get(params map[string]string) []*Requirement {
+func GetByParams(params map[string]string) ([]*Requirement, error) {
 	o := orm.NewOrm()
 	o.Using("datahub")
 
 	var requirements []*Requirement
-	qs := o.QueryTable("requirement")
+	qs := o.QueryTable("dh_requirement")
 
+	if loginUser, ok := params["loginUser"]; ok {
+		qs = qs.Filter("create_user__exact", loginUser)
+	}
 	if name, _ := params["name"]; name != "" {
-		beego.Debug(name)
 		qs = qs.Filter("name__iexact", name)
 	}
 	if phone, _ := params["phone"]; phone != "" {
@@ -51,11 +53,14 @@ func Get(params map[string]string) []*Requirement {
 	if content, _ := params["content"]; content != "" {
 		qs = qs.Filter("requirement_content__icontains", content)
 	}
-	qs.All(&requirements)
+	_, err := qs.All(&requirements)
+	if err != nil {
+		return nil, err
+	}
 
 	beego.Debug(requirements)
 
-	return requirements
+	return requirements, err
 }
 
 func GetById(id int) Requirement {
@@ -114,6 +119,4 @@ func init() {
 	orm.RegisterDataBase("default", "mysql", connstr, 30)
 
 	orm.RunSyncdb("default", false, true)
-
-	//
 }

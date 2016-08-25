@@ -5,6 +5,7 @@ const (
 	ErrorUnauthorized = iota + 4000
 	ErrorUnmarshal
 	ErrorAddModel
+	ErrorGetModel
 )
 
 type Result struct {

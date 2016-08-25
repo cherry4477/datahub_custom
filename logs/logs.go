@@ -5,5 +5,6 @@ import (
 )
 
 func init() {
+	//beego.SetLevel(beego.LevelInformational)
 	beego.SetLevel(beego.LevelDebug)
 }

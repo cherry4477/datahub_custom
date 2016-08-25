@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-type ARequirementController struct {
+type ERequirementController struct {
 	beego.Controller
 }
 
@@ -25,8 +25,8 @@ type DRequirementController struct {
 // @Success 200 {string} models.Object.Id
 // @Failure 403 body is empty
 // @router / [post]
-func (this *ARequirementController) Post() {
-	beego.Informational(this.Ctx.Request.URL, "Admin create a requirement.")
+func (this *ERequirementController) Post() {
+	beego.Informational(this.Ctx.Request.URL, "Exchange create a requirement.")
 
 	this.auth()
 
@@ -46,10 +46,10 @@ func (this *ARequirementController) Post() {
 // @Success 200 {object} models.Object
 // @Failure 403 :objectId is empty
 // @router /requirement [get]
-func (this *ARequirementController) Get() {
-	beego.Informational(this.Ctx.Request.URL, "Admin get requirements by params.")
+func (this *ERequirementController) Get() {
+	beego.Informational(this.Ctx.Request.URL, "Exchange get requirements by params.")
 
-	//this.auth()
+	this.auth()
 
 	var name, phone, email, company, content string
 	var params = make(map[string]string)
@@ -66,10 +66,13 @@ func (this *ARequirementController) Get() {
 	params["content"] = content
 	beego.Debug(params)
 
-	obs := models.Get(params)
+	reqs, err := models.GetByParams(params)
+	if err != nil {
+		beego.Error("Model, GetByParams err:", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorGetModel, err.Error(), nil)
+	}
 
-	this.Data["json"] = obs
-	this.ServeJSON()
+	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", reqs)
 }
 
 // @Title GetAll
@@ -77,8 +80,8 @@ func (this *ARequirementController) Get() {
 // @Success 200 {object} models.Object
 // @Failure 403 :objectId is empty
 // @router / [get]
-func (this *ARequirementController) GetAll() {
-	beego.Informational(this.Ctx.Request.URL, "Admin get all requirement.")
+func (this *ERequirementController) GetAll() {
+	beego.Informational(this.Ctx.Request.URL, "Exchange get all requirement.")
 
 	this.auth()
 
@@ -94,8 +97,8 @@ func (this *ARequirementController) GetAll() {
 // @Success 200 {object} models.Object
 // @Failure 403 :objectId is empty
 // @router /:reqId [put]
-func (this *ARequirementController) Put() {
-	beego.Informational(this.Ctx.Request.URL, "Admin update a requirement.")
+func (this *ERequirementController) Put() {
+	beego.Informational(this.Ctx.Request.URL, "Exchange update a requirement.")
 
 	reqId := this.Ctx.Input.Param(":reqId")
 
@@ -123,7 +126,7 @@ func (this *ARequirementController) Put() {
 // @Success 200 {string} delete success!
 // @Failure 403 objectId is empty
 // @router /:objectId [delete]
-func (o *ARequirementController) Delete() {
+func (o *ERequirementController) Delete() {
 	//objectId := o.Ctx.Input.Param(":objectId")
 	//models.Delete(objectId)
 	//o.Data["json"] = "delete success!"
@@ -143,24 +146,56 @@ func (this *DRequirementController) Post() {
 	err := json.Unmarshal(this.Ctx.Input.RequestBody, &object)
 	if err != nil {
 		beego.Error("Unmarshal err :", err)
-		this.SendResult(http.StatusBadRequest, ds.ErrorUnmarshal, err.Error(), nil)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorUnmarshal, err.Error(), nil)
 	}
 	beego.Debug(object)
 	_, err = models.AddOne(object)
 	if err != nil {
-		beego.Error("models, addone err :", err)
-		this.SendResult(http.StatusBadRequest, ds.ErrorAddModel, err.Error(), nil)
+		beego.Error("Model, AddOne err :", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorAddModel, err.Error(), nil)
 	}
 
-	this.SendResult(http.StatusOK, ds.ResultOK, "OK.", nil)
+	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", nil)
 }
 
-func (this *ARequirementController) auth() {
+//@router /requirement [get]
+func (this *DRequirementController) Get() {
+	beego.Informational(this.Ctx.Request.URL, "Datahub get requirements by params.")
+
+	this.auth()
+	loginName := getLoginName(this.Controller)
+
+	var name, phone, email, company, content string
+	var params = make(map[string]string)
+
+	this.Ctx.Input.Bind(&name, "name")
+	this.Ctx.Input.Bind(&phone, "phone")
+	this.Ctx.Input.Bind(&email, "email")
+	this.Ctx.Input.Bind(&company, "company")
+	this.Ctx.Input.Bind(&content, "content")
+	params["name"] = name
+	params["phone"] = phone
+	params["email"] = email
+	params["company"] = company
+	params["content"] = content
+	params["loginUser"] = loginName
+	beego.Debug(params)
+
+	reqs, err := models.GetByParams(params)
+	if err != nil {
+		beego.Error("Model, GetByParams err:", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorGetModel, err.Error(), nil)
+	}
+
+	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", reqs)
+}
+
+func (this *ERequirementController) auth() {
 	loginStr := this.Ctx.Request.Header.Get("User")
 	region := strings.Split(loginStr, "+")[0]
 	if region == ""  || region == "datahub" {
 		beego.Notice("not authorized.")
-		this.Abort("401")
+		sendResult(this.Controller, http.StatusUnauthorized, ds.ErrorUnauthorized, "not authorized.", nil)
 	}
 }
 
@@ -169,11 +204,11 @@ func (this *DRequirementController) auth() {
 	region := strings.Split(loginStr, "+")[0]
 	if region == "" || region != "datahub" {
 		beego.Notice("not authorized.")
-		this.SendResult(http.StatusUnauthorized, ds.ErrorUnauthorized, "not authorized.", nil)
+		sendResult(this.Controller, http.StatusUnauthorized, ds.ErrorUnauthorized, "not authorized.", nil)
 	}
 }
 
-func (this *DRequirementController) SendResult(statusCode int, code int, msg string, data interface{}) {
+func sendResult(this beego.Controller, statusCode int, code int, msg string, data interface{}) {
 	this.Ctx.Output.SetStatus(statusCode)
 	result := ds.Result{Code: code, Msg: msg, Data: data}
 
