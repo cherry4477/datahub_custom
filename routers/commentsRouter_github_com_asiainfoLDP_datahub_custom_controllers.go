@@ -51,7 +51,7 @@ func init() {
 	beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ERequirementController"] = append(beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ERequirementController"],
 		beego.ControllerComments{
 			"Delete",
-			`/:objectId`,
+			`/:reqId`,
 			[]string{"delete"},
 			nil})
 

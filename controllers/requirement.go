@@ -26,18 +26,24 @@ type DRequirementController struct {
 // @Failure 403 body is empty
 // @router / [post]
 func (this *ERequirementController) Post() {
-	beego.Informational(this.Ctx.Request.URL, "Exchange create a requirement.")
+	beego.Informational(this.Ctx.Request.URL, "Operation create a requirement.")
 
 	this.auth()
 
 	var object models.Requirement
-	json.Unmarshal(this.Ctx.Input.RequestBody, &object)
+	err := json.Unmarshal(this.Ctx.Input.RequestBody, &object)
+	if err != nil {
+		beego.Error("Unmarshal err :", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorUnmarshal, err.Error(), nil)
+	}
 	beego.Debug(object)
 
-	models.AddOne(object)
-	this.Data["json"] = "Insert success."
-	//this.Data["json"] = map[string]int64{"InsertId": insertId}
-	this.ServeJSON()
+	_, err = models.AddOne(object)
+	if err != nil {
+		beego.Error("Model, AddOne err :", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorAddModel, err.Error(), nil)
+	}
+	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", nil)
 }
 
 // @Title Get
@@ -47,7 +53,7 @@ func (this *ERequirementController) Post() {
 // @Failure 403 :objectId is empty
 // @router /requirement [get]
 func (this *ERequirementController) Get() {
-	beego.Informational(this.Ctx.Request.URL, "Exchange get requirements by params.")
+	beego.Informational(this.Ctx.Request.URL, "Operation get requirements by params.")
 
 	this.auth()
 
@@ -68,7 +74,7 @@ func (this *ERequirementController) Get() {
 
 	reqs, err := models.GetByParams(params)
 	if err != nil {
-		beego.Error("Model, GetByParams err:", err)
+		beego.Error("Model, GetByParamsFilerUser err:", err)
 		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorGetModel, err.Error(), nil)
 	}
 
@@ -81,13 +87,17 @@ func (this *ERequirementController) Get() {
 // @Failure 403 :objectId is empty
 // @router / [get]
 func (this *ERequirementController) GetAll() {
-	beego.Informational(this.Ctx.Request.URL, "Exchange get all requirement.")
+	beego.Informational(this.Ctx.Request.URL, "Operation get all requirement.")
 
 	this.auth()
 
-	obs := models.GetAll()
-	this.Data["json"] = obs
-	this.ServeJSON()
+	reqs, err := models.GetAll()
+	if err != nil {
+		beego.Error("Model, GetAll err:", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorGetModel, err.Error(), nil)
+	}
+
+	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", reqs)
 }
 
 // @Title update
@@ -98,26 +108,43 @@ func (this *ERequirementController) GetAll() {
 // @Failure 403 :objectId is empty
 // @router /:reqId [put]
 func (this *ERequirementController) Put() {
-	beego.Informational(this.Ctx.Request.URL, "Exchange update a requirement.")
+	beego.Informational(this.Ctx.Request.URL, "Operation update a requirement.")
+
+	//this.auth()
 
 	reqId := this.Ctx.Input.Param(":reqId")
-
-	var object models.Requirement
-
-	id, _ := strconv.Atoi(reqId)
-
-	object = models.GetById(id)
-	err := json.Unmarshal(this.Ctx.Input.RequestBody, &object)
-	beego.Debug(string(this.Ctx.Input.RequestBody))
+	id, err := strconv.Atoi(reqId)
 	if err != nil {
-		beego.Error(err)
+		beego.Error("Atoi err:", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorAtoi, err.Error(), nil)
 	}
-	beego.Debug(object)
 
-	object.Id, _ = strconv.Atoi(reqId)
-	models.Update(object)
-	beego.Debug(object)
-	this.ServeJSON()
+	req, err := models.GetById(id)
+	if err != nil {
+		beego.Error("Model, GetById err:", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorGetModel, err.Error(), nil)
+	}
+
+	err = json.Unmarshal(this.Ctx.Input.RequestBody, &req)
+	if err != nil {
+		beego.Error("Unmarshal err :", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorUnmarshal, err.Error(), nil)
+	}
+
+	req.Id, err = strconv.Atoi(reqId)
+	if err != nil {
+		beego.Error("Atoi err:", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorAtoi, err.Error(), nil)
+	}
+	beego.Debug(req)
+
+	_, err = models.Update(req)
+	if err != nil {
+		beego.Error("Model, Update err:", err)
+		beego.Error(this.Controller, http.StatusBadRequest, ds.ErrorUpdateModel, err.Error(), nil)
+	}
+
+	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", nil)
 }
 
 // @Title delete
@@ -125,12 +152,22 @@ func (this *ERequirementController) Put() {
 // @Param	objectId		path 	string	true		"The objectId you want to delete"
 // @Success 200 {string} delete success!
 // @Failure 403 objectId is empty
-// @router /:objectId [delete]
-func (o *ERequirementController) Delete() {
-	//objectId := o.Ctx.Input.Param(":objectId")
-	//models.Delete(objectId)
-	//o.Data["json"] = "delete success!"
-	//o.ServeJSON()
+// @router /:reqId [delete]
+func (this *ERequirementController) Delete() {
+	reqId := this.Ctx.Input.Param(":reqId")
+	id , err := strconv.Atoi(reqId)
+	if err != nil {
+		beego.Error("Atoi err:", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorAtoi, err.Error(), nil)
+	}
+
+	err = models.Delete(id)
+	if err != nil {
+		beego.Error("Model, Delete err:", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorDeleteModel, err.Error(), nil)
+	}
+
+	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", nil)
 }
 
 //@router / [post]
@@ -149,6 +186,7 @@ func (this *DRequirementController) Post() {
 		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorUnmarshal, err.Error(), nil)
 	}
 	beego.Debug(object)
+
 	_, err = models.AddOne(object)
 	if err != nil {
 		beego.Error("Model, AddOne err :", err)
@@ -181,7 +219,7 @@ func (this *DRequirementController) Get() {
 	params["loginUser"] = loginName
 	beego.Debug(params)
 
-	reqs, err := models.GetByParams(params)
+	reqs, err := models.GetByParamsFilterUser(params)
 	if err != nil {
 		beego.Error("Model, GetByParams err:", err)
 		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorGetModel, err.Error(), nil)

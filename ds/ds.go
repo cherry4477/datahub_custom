@@ -6,6 +6,9 @@ const (
 	ErrorUnmarshal
 	ErrorAddModel
 	ErrorGetModel
+	ErrorUpdateModel
+	ErrorDeleteModel
+	ErrorAtoi
 )
 
 type Result struct {

@@ -28,7 +28,7 @@ func AddOne(requirement Requirement) (int64, error) {
 	return id, err
 }
 
-func GetByParams(params map[string]string) ([]*Requirement, error) {
+func GetByParamsFilterUser(params map[string]string) ([]*Requirement, error) {
 	o := orm.NewOrm()
 	o.Using("datahub")
 
@@ -63,40 +63,91 @@ func GetByParams(params map[string]string) ([]*Requirement, error) {
 	return requirements, err
 }
 
-func GetById(id int) Requirement {
+func GetByParams(params map[string]string) ([]*Requirement, error) {
+	o := orm.NewOrm()
+	o.Using("datahub")
+
+	var requirements []*Requirement
+	qs := o.QueryTable("dh_requirement")
+
+	if name, _ := params["name"]; name != "" {
+		qs = qs.Filter("name__iexact", name)
+	}
+	if phone, _ := params["phone"]; phone != "" {
+		qs = qs.Filter("phone__contains", phone)
+	}
+	if email, _ := params["email"]; email != "" {
+		qs = qs.Filter("email__contains", email)
+	}
+	if company, _ := params["company"]; company != "" {
+		qs = qs.Filter("company__iexact", company)
+	}
+	if content, _ := params["content"]; content != "" {
+		qs = qs.Filter("requirement_content__icontains", content)
+	}
+	_, err := qs.All(&requirements)
+	if err != nil {
+		return nil, err
+	}
+
+	beego.Debug(requirements)
+
+	return requirements, err
+}
+
+func GetById(id int) (*Requirement, error) {
 	o := orm.NewOrm()
 	o.Using("datahub")
 
 	requirement := Requirement{Id: id}
 
-	o.Read(&requirement)
+	err := o.Read(&requirement)
+	if err != nil {
+		return nil, err
+	}
 
-	return requirement
+	return &requirement, err
 }
 
-func GetAll() []*Requirement {
+func GetAll() ([]*Requirement, error) {
 	o := orm.NewOrm()
 	o.Using("datahub")
 
 	var requirements []*Requirement
-	_, err := o.QueryTable("requirement").All(&requirements)
-	checkErr(err)
+	_, err := o.QueryTable("dh_requirement").All(&requirements)
+	if err != nil {
+		return nil, err
+	}
 
 	beego.Debug(requirements)
 
-	return requirements
+	return requirements, err
 
 }
 
-func Update(req Requirement) {
+func Update(req *Requirement) (int64, error) {
 	o := orm.NewOrm()
 	o.Using("datahub")
 
-	_, err := o.Update(&req)
-	checkErr(err)
+	rows, err := o.Update(req)
+	if err != nil {
+		return 0, err
+	}
+
+	return rows, err
 }
 
-func Delete(ObjectId string) {
+func Delete(id int) error{
+	o := orm.NewOrm()
+	o.Using("datahub")
+
+	rs := o.Raw("UPDATE dh_requirement SET status = ? WHERE id = ?", "N", id)
+	_, err := rs.Exec()
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 func checkErr(err error) {
@@ -114,9 +165,13 @@ func init() {
 
 	beego.Debug(mysqlUser, mysqlPassword, mysqlDatabase)
 
-	connstr := mysqlUser + ":" + mysqlPassword + "@tcp(" + mysqlUrl + ")/" + mysqlDatabase + "?charset=utf8&loc=Asia%2FShanghai"
+	connstr := mysqlUser + ":" + mysqlPassword + "@tcp(" + mysqlUrl + ")/" + mysqlDatabase + "?charset=utf8"
 
 	orm.RegisterDataBase("default", "mysql", connstr, 30)
 
 	orm.RunSyncdb("default", false, true)
+
+	//orm.DefaultTimeLoc = time.UTC
+
+	//&loc=Asia%2FShanghai
 }
