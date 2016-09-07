@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-type ERequirementController struct {
+type ORequirementController struct {
 	beego.Controller
 }
 
@@ -25,10 +25,10 @@ type DRequirementController struct {
 // @Success 200 {string} models.Object.Id
 // @Failure 403 body is empty
 // @router / [post]
-func (this *ERequirementController) Post() {
+func (this *ORequirementController) Post() {
 	beego.Informational(this.Ctx.Request.URL, "Operation create a requirement.")
 
-	this.auth()
+	//this.auth()
 
 	var object models.Requirement
 	err := json.Unmarshal(this.Ctx.Input.RequestBody, &object)
@@ -52,7 +52,7 @@ func (this *ERequirementController) Post() {
 // @Success 200 {object} models.Object
 // @Failure 403 :objectId is empty
 // @router /requirement [get]
-func (this *ERequirementController) Get() {
+func (this *ORequirementController) Get() {
 	beego.Informational(this.Ctx.Request.URL, "Operation get requirements by params.")
 
 	this.auth()
@@ -86,10 +86,10 @@ func (this *ERequirementController) Get() {
 // @Success 200 {object} models.Object
 // @Failure 403 :objectId is empty
 // @router / [get]
-func (this *ERequirementController) GetAll() {
+func (this *ORequirementController) GetAll() {
 	beego.Informational(this.Ctx.Request.URL, "Operation get all requirement.")
 
-	this.auth()
+	//this.auth()
 
 	reqs, err := models.GetAll()
 	if err != nil {
@@ -107,7 +107,7 @@ func (this *ERequirementController) GetAll() {
 // @Success 200 {object} models.Object
 // @Failure 403 :objectId is empty
 // @router /:reqId [put]
-func (this *ERequirementController) Put() {
+func (this *ORequirementController) Put() {
 	beego.Informational(this.Ctx.Request.URL, "Operation update a requirement.")
 
 	//this.auth()
@@ -153,9 +153,9 @@ func (this *ERequirementController) Put() {
 // @Success 200 {string} delete success!
 // @Failure 403 objectId is empty
 // @router /:reqId [delete]
-func (this *ERequirementController) Delete() {
+func (this *ORequirementController) Delete() {
 	reqId := this.Ctx.Input.Param(":reqId")
-	id , err := strconv.Atoi(reqId)
+	id, err := strconv.Atoi(reqId)
 	if err != nil {
 		beego.Error("Atoi err:", err)
 		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorAtoi, err.Error(), nil)
@@ -228,7 +228,7 @@ func (this *DRequirementController) Get() {
 	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", reqs)
 }
 
-func (this *ERequirementController) auth() {
+func (this *ORequirementController) auth() {
 	loginStr := this.Ctx.Request.Header.Get("User")
 	region := strings.Split(loginStr, "+")[0]
 	if region == "" || region == "datahub" {

@@ -137,7 +137,7 @@ func Update(req *Requirement) (int64, error) {
 	return rows, err
 }
 
-func Delete(id int) error{
+func Delete(id int) error {
 	o := orm.NewOrm()
 	o.Using("datahub")
 

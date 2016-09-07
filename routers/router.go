@@ -16,7 +16,7 @@ func init() {
 	ns := beego.NewNamespace("/custom",
 		beego.NSNamespace("/operation",
 			beego.NSInclude(
-				&controllers.ERequirementController{},
+				&controllers.ORequirementController{},
 			),
 		),
 		beego.NSNamespace("/datahub",
@@ -27,10 +27,3 @@ func init() {
 	)
 	beego.AddNamespace(ns)
 }
-
-//var auth = func(ctx *context.Context) {
-//	loginName := ctx.Request.Header.Get("User")
-//	if loginName == ""  {
-//		ctx.Abort(401, "no auth")
-//	}
-//}
