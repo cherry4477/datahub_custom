@@ -9,6 +9,7 @@ const (
 	ErrorUpdateModel
 	ErrorDeleteModel
 	ErrorAtoi
+	ErrorValidateParams
 )
 
 type Result struct {

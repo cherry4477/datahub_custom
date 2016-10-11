@@ -8,7 +8,7 @@ func init() {
 
 	beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:DRequirementController"] = append(beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:DRequirementController"],
 		beego.ControllerComments{
-			"Post",
+			"Create",
 			`/`,
 			[]string{"post"},
 			nil})
@@ -22,7 +22,7 @@ func init() {
 
 	beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ORequirementController"] = append(beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ORequirementController"],
 		beego.ControllerComments{
-			"Post",
+			"Create",
 			`/`,
 			[]string{"post"},
 			nil})
@@ -43,8 +43,15 @@ func init() {
 
 	beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ORequirementController"] = append(beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ORequirementController"],
 		beego.ControllerComments{
-			"Put",
+			"Update",
 			`/:reqId`,
+			[]string{"put"},
+			nil})
+
+	beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ORequirementController"] = append(beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ORequirementController"],
+		beego.ControllerComments{
+			"Review",
+			`/review/:reqId`,
 			[]string{"put"},
 			nil})
 

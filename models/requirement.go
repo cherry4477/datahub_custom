@@ -14,18 +14,29 @@ var (
 	mysqlUrl      string
 )
 
-func AddOne(requirement Requirement) (int64, error) {
+func AddOne(requirement *Requirement) (int64, error) {
 	o := orm.NewOrm()
 	o.Using("datahub")
-	requirement.Status = "A"
 
-	id, err := o.Insert(&requirement)
+	requirementId, err := o.Insert(requirement)
 	if err != nil {
 		return 0, err
 	}
-	beego.Debug(id)
+	beego.Debug("requirementId:", requirementId)
 
-	return id, err
+	history := new(History)
+	history.Remark = requirement.Remark
+	history.Status = requirement.Status
+	history.Available = "Y"
+	history.Requirement = requirement
+	beego.Debug(history)
+
+	_, err = o.Insert(history)
+	if err != nil {
+		return requirementId, err
+	}
+
+	return requirementId, err
 }
 
 func GetByParamsFilterUser(params map[string]string) ([]*Requirement, error) {
@@ -134,6 +145,31 @@ func Update(req *Requirement) (int64, error) {
 		return 0, err
 	}
 
+	beego.Debug("Update reqId:", req.Id)
+	var idList orm.ParamsList
+	_, err = o.Raw("SELECT id FROM dh_rm_history WHERE available = 'Y' AND requirement_id = ?", req.Id).ValuesFlat(&idList)
+	if err != nil {
+		return 0, err
+	}
+	beego.Debug(idList)
+
+	rs := o.Raw("UPDATE dh_rm_history SET available = ? WHERE id = ?", "N", idList[len(idList)-1])
+	_, err = rs.Exec()
+	if err != nil {
+		return 0, err
+	}
+
+	history := new(History)
+	history.Remark = req.Remark
+	history.Status = req.Status
+	history.Review_user = req.Review_user
+	history.Available = "Y"
+	history.Requirement = req
+	_, err = o.Insert(history)
+	if err != nil {
+		return 0, err
+	}
+
 	return rows, err
 }
 
@@ -141,20 +177,13 @@ func Delete(id int) error {
 	o := orm.NewOrm()
 	o.Using("datahub")
 
-	rs := o.Raw("UPDATE dh_requirement SET status = ? WHERE id = ?", "N", id)
+	rs := o.Raw("UPDATE dh_requirement SET status = ? WHERE id = ?", "需求取消", id)
 	_, err := rs.Exec()
 	if err != nil {
 		return err
 	}
 
 	return err
-}
-
-func checkErr(err error) {
-	if err != nil {
-		beego.Error(err)
-		panic(err)
-	}
 }
 
 func init() {
@@ -165,13 +194,11 @@ func init() {
 
 	beego.Debug(mysqlUser, mysqlPassword, mysqlDatabase)
 
-	connstr := mysqlUser + ":" + mysqlPassword + "@tcp(" + mysqlUrl + ")/" + mysqlDatabase + "?charset=utf8"
+	connstr := mysqlUser + ":" + mysqlPassword + "@tcp(" + mysqlUrl + ")/" + mysqlDatabase + "?charset=utf8&loc=Asia%2FShanghai"
 
 	orm.RegisterDataBase("default", "mysql", connstr, 30)
 
 	orm.RunSyncdb("default", false, true)
 
 	//orm.DefaultTimeLoc = time.UTC
-
-	//&loc=Asia%2FShanghai
 }
