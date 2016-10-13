@@ -56,6 +56,27 @@ func (this *ORequirementController) Create() {
 	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", requirementId)
 }
 
+//@router /requirement/:reqId [get]
+func (this *ORequirementController) GetById() {
+	beego.Informational(this.Ctx.Request.URL, "Operation get requirements by params.")
+
+	reqId := this.Ctx.Input.Param(":reqId")
+	id, err := strconv.Atoi(reqId)
+	if err != nil {
+		beego.Error("Atoi err:", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorAtoi, err.Error(), nil)
+		return
+	}
+
+	history, err := models.GetNewHistory(id)
+	if err != nil {
+		beego.Error("Model, get by id err:", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorGetModelById, err.Error(), nil)
+	}
+
+	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", history)
+}
+
 // @Title Get
 // @Description find object by objectid
 // @Param	objectId		path 	string	true		"the objectid you want to get"
@@ -64,8 +85,9 @@ func (this *ORequirementController) Create() {
 // @router /requirement [get]
 func (this *ORequirementController) Get() {
 	beego.Informational(this.Ctx.Request.URL, "Operation get requirements by params.")
+	beego.Info("begin get requirement by param handler.")
 
-	this.auth()
+	//this.auth()
 
 	var name, phone, email, company, content string
 	var params = make(map[string]string)
@@ -89,6 +111,7 @@ func (this *ORequirementController) Get() {
 		return
 	}
 
+	beego.Info("end get requirement by param handler.")
 	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", reqs)
 }
 
@@ -120,8 +143,8 @@ func (this *ORequirementController) GetAll() {
 // @Failure 403 :objectId is empty
 // @router /:reqId [put]
 func (this *ORequirementController) Update() {
-	beego.Informational(this.Ctx.Request.URL, "Operation update a requirement.")
-
+	beego.Info(this.Ctx.Request.URL, "Operation update a requirement.")
+	beego.Info("begin update requirement handler.")
 	//this.auth()
 	//loginName := getLoginName(this.Controller)
 
@@ -162,6 +185,7 @@ func (this *ORequirementController) Update() {
 		return
 	}
 
+	beego.Info("end update requirement handler.")
 	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", nil)
 }
 
@@ -243,7 +267,6 @@ func (this *DRequirementController) Create() {
 	beego.Informational(this.Ctx.Request.URL, "Datahub create a requirement.")
 
 	loginName := getLoginName(this.Controller)
-	//var object models.Requirement
 	requirement := new(models.Requirement)
 	if loginName != "" {
 		requirement.Create_user = loginName
@@ -263,12 +286,12 @@ func (this *DRequirementController) Create() {
 		return
 	}
 
-	//requirementId, _, err := models.AddOne(object)
-	//if err != nil {
-	//	beego.Error("Model, AddOne err :", err)
-	//	sendResult(this.Controller, http.StatusBadRequest, ds.ErrorAddModel, err.Error(), nil)
-	//	return
-	//}
+	_, err = models.AddOne(requirement)
+	if err != nil {
+		beego.Error("Model, AddOne err :", err)
+		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorAddModel, err.Error(), nil)
+		return
+	}
 
 	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", nil)
 }

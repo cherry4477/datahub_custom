@@ -15,6 +15,8 @@ var (
 )
 
 func AddOne(requirement *Requirement) (int64, error) {
+	beego.Info("begin create a requirement model.")
+
 	o := orm.NewOrm()
 	o.Using("datahub")
 
@@ -36,10 +38,13 @@ func AddOne(requirement *Requirement) (int64, error) {
 		return requirementId, err
 	}
 
+	beego.Info("end create a requirement model.")
 	return requirementId, err
 }
 
 func GetByParamsFilterUser(params map[string]string) ([]*Requirement, error) {
+	beego.Info("begin get requirement for datahub by param model.")
+
 	o := orm.NewOrm()
 	o.Using("datahub")
 
@@ -69,12 +74,24 @@ func GetByParamsFilterUser(params map[string]string) ([]*Requirement, error) {
 		return nil, err
 	}
 
+	for _, requirement := range requirements {
+		history := new(History)
+		_, err := o.QueryTable("dh_rm_history").Filter("requirement_id", requirement.Id).Filter("available__exact", "Y").All(&history)
+		if err != nil {
+			return nil, err
+		}
+		requirement.History = append(requirement.History, history)
+	}
+
 	beego.Debug(requirements)
 
+	beego.Info("end get requirement for datahub by param model.")
 	return requirements, err
 }
 
 func GetByParams(params map[string]string) ([]*Requirement, error) {
+	beego.Info("begin get requirement by param model.")
+
 	o := orm.NewOrm()
 	o.Using("datahub")
 
@@ -101,42 +118,92 @@ func GetByParams(params map[string]string) ([]*Requirement, error) {
 		return nil, err
 	}
 
+	beego.Debug("requirements:", requirements)
+
+	for _, requirement := range requirements {
+		history := new(History)
+		_, err := o.QueryTable("dh_rm_history").Filter("requirement_id", requirement.Id).Filter("available__exact", "Y").All(history)
+		if err != nil {
+			return nil, err
+		}
+		requirement.History = append(requirement.History, history)
+	}
+
 	beego.Debug(requirements)
 
+	beego.Info("end get requirement by param model.")
 	return requirements, err
 }
+func GetById(reqId int) (*Requirement, error) {
+	beego.Info("begin get a requirement without history model.")
 
-func GetById(id int) (*Requirement, error) {
 	o := orm.NewOrm()
 	o.Using("datahub")
 
-	requirement := Requirement{Id: id}
+	requirement := Requirement{Id: reqId}
 
 	err := o.Read(&requirement)
 	if err != nil {
 		return nil, err
 	}
 
+	beego.Info("end get a requirement without history model.")
 	return &requirement, err
 }
 
-func GetAll() ([]*Requirement, error) {
+func GetNewHistory(reqId int) (*History, error) {
+	beego.Info("begin get a requirement with history model.")
+
 	o := orm.NewOrm()
 	o.Using("datahub")
 
-	var requirements []*Requirement
-	_, err := o.QueryTable("dh_requirement").All(&requirements)
+	history := new(History)
+
+	qs := o.QueryTable("dh_rm_history")
+	qs = qs.Filter("requirement_id", reqId).Filter("available__exact", "Y")
+
+	_, err := qs.All(history)
+	if err != nil {
+		return nil, err
+	}
+	beego.Debug("history:", history)
+
+	_, err = o.LoadRelated(history, "requirement")
 	if err != nil {
 		return nil, err
 	}
 
-	beego.Debug(requirements)
+	beego.Info("end get a requirement with history model.")
+	return history, err
+}
 
-	return requirements, err
+func GetAll() ([]*History, error) {
+	beego.Info("begin get all requirements model.")
 
+	o := orm.NewOrm()
+	o.Using("datahub")
+
+	var historys []*History
+	_, err := o.QueryTable("dh_rm_history").Filter("available__exact", "Y").All(&historys)
+	if err != nil {
+		return nil, err
+	}
+	beego.Debug("historys:", historys)
+
+	for _, history := range historys {
+		_, err = o.LoadRelated(history, "requirement")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	beego.Info("end get all requirements model.")
+	return historys, err
 }
 
 func Update(req *Requirement) (int64, error) {
+	beego.Info("begin update requirement model.")
+
 	o := orm.NewOrm()
 	o.Using("datahub")
 
@@ -170,10 +237,13 @@ func Update(req *Requirement) (int64, error) {
 		return 0, err
 	}
 
+	beego.Info("end update requirement model.")
 	return rows, err
 }
 
 func Delete(id int) error {
+	beego.Info("begin delete requirement model.")
+
 	o := orm.NewOrm()
 	o.Using("datahub")
 
@@ -183,6 +253,7 @@ func Delete(id int) error {
 		return err
 	}
 
+	beego.Info("end delete requirement model.")
 	return err
 }
 

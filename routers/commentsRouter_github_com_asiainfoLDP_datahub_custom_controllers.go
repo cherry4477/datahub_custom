@@ -29,6 +29,13 @@ func init() {
 
 	beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ORequirementController"] = append(beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ORequirementController"],
 		beego.ControllerComments{
+			"GetById",
+			`/requirement/:reqId`,
+			[]string{"get"},
+			nil})
+
+	beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ORequirementController"] = append(beego.GlobalControllerRouter["github.com/asiainfoLDP/datahub_custom/controllers:ORequirementController"],
+		beego.ControllerComments{
 			"Get",
 			`/requirement`,
 			[]string{"get"},

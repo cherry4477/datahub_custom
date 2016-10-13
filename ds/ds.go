@@ -6,6 +6,7 @@ const (
 	ErrorUnmarshal
 	ErrorAddModel
 	ErrorGetModel
+	ErrorGetModelById
 	ErrorUpdateModel
 	ErrorDeleteModel
 	ErrorAtoi
