@@ -5,6 +5,7 @@ import (
 	"github.com/asiainfoLDP/datahub_custom/ds"
 	_ "github.com/asiainfoLDP/datahub_custom/logs"
 	"github.com/asiainfoLDP/datahub_custom/models"
+	//"github.com/asiainfoLDP/datahub_custom/pager"
 	"github.com/astaxie/beego"
 	"net/http"
 	"strconv"
@@ -125,14 +126,17 @@ func (this *ORequirementController) GetAll() {
 
 	//this.auth()
 
-	reqs, err := models.GetAll()
+	offset, size := OptionalOffsetAndSize(this.Ctx.Request, 30, 1, 100)
+	beego.Debug("offset, size:", offset, size)
+
+	reqs, err := models.GetAll(offset, size)
 	if err != nil {
 		beego.Error("Model, GetAll err:", err)
 		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorGetModel, err.Error(), nil)
 		return
 	}
 
-	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", reqs)
+	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", NewQueryListResult(int64(len(reqs)), reqs))
 }
 
 // @Title update
@@ -267,6 +271,7 @@ func (this *DRequirementController) Create() {
 	beego.Informational(this.Ctx.Request.URL, "Datahub create a requirement.")
 
 	loginName := getLoginName(this.Controller)
+	beego.Debug("loginname:", loginName)
 	requirement := new(models.Requirement)
 	if loginName != "" {
 		requirement.Create_user = loginName
@@ -278,6 +283,7 @@ func (this *DRequirementController) Create() {
 		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorUnmarshal, err.Error(), nil)
 		return
 	}
+	requirement.Status = "需求提交"
 	beego.Debug(requirement)
 
 	if flag := validateParams(requirement); flag == false {
@@ -300,7 +306,7 @@ func (this *DRequirementController) Create() {
 func (this *DRequirementController) Get() {
 	beego.Informational(this.Ctx.Request.URL, "Datahub get requirements by params.")
 
-	this.auth()
+	//this.auth()
 	loginName := getLoginName(this.Controller)
 
 	var name, phone, email, company, content string
@@ -319,7 +325,10 @@ func (this *DRequirementController) Get() {
 	params["loginUser"] = loginName
 	beego.Debug(params)
 
-	reqs, err := models.GetByParamsFilterUser(params)
+	offset, size := OptionalOffsetAndSize(this.Ctx.Request, 30, 1, 100)
+	beego.Debug("offset, size:", offset, size)
+
+	reqs, err := models.GetByParamsFilterUser(params, offset, size)
 	if err != nil {
 		beego.Error("Model, GetByParams err:", err)
 		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorGetModel, err.Error(), nil)
@@ -345,39 +354,4 @@ func (this *DRequirementController) auth() {
 		beego.Notice("not authorized.")
 		sendResult(this.Controller, http.StatusUnauthorized, ds.ErrorUnauthorized, "not authorized.", nil)
 	}
-}
-
-func sendResult(this beego.Controller, statusCode int, code int, msg string, data interface{}) {
-	this.Ctx.Output.SetStatus(statusCode)
-	result := ds.Result{Code: code, Msg: msg, Data: data}
-
-	this.Data["json"] = &result
-	this.ServeJSON()
-}
-
-func getLoginName(this beego.Controller) string {
-	loginStr := this.Ctx.Request.Header.Get("User")
-	if loginStr == "" {
-		return ""
-	}
-	loginName := strings.Split(loginStr, "+")[1]
-
-	return loginName
-}
-
-func validateParams(object *models.Requirement) bool {
-
-	if len([]rune(object.Requirement_content)) > 200 ||
-		len([]rune(object.Requirement_name)) > 100 ||
-		len([]rune(object.Trade)) > 52 ||
-		len([]rune(object.Scope)) > 200 ||
-		len([]rune(object.Scene)) > 200 ||
-		len([]rune(object.Frequency)) > 52 ||
-		len([]rune(object.Deliver)) > 52 ||
-		len([]rune(object.Remark)) > 200 {
-
-		return false
-	}
-
-	return true
 }

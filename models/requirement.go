@@ -5,6 +5,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
+	"time"
 )
 
 var (
@@ -42,7 +43,19 @@ func AddOne(requirement *Requirement) (int64, error) {
 	return requirementId, err
 }
 
-func GetByParamsFilterUser(params map[string]string) ([]*Requirement, error) {
+type GetByParamsFilterUserResult struct {
+	Id                  int
+	Name                string
+	Phone               string
+	Email               string
+	Company             string
+	Requirement_content string
+	Create_time         time.Time
+	Remark              string
+	Status              string
+}
+
+func GetByParamsFilterUser(params map[string]string, offset int64, size int) ([]GetByParamsFilterUserResult, error) {
 	beego.Info("begin get requirement for datahub by param model.")
 
 	o := orm.NewOrm()
@@ -69,10 +82,16 @@ func GetByParamsFilterUser(params map[string]string) ([]*Requirement, error) {
 	if content, _ := params["content"]; content != "" {
 		qs = qs.Filter("requirement_content__icontains", content)
 	}
-	_, err := qs.All(&requirements)
+	count, err := qs.All(&requirements)
 	if err != nil {
 		return nil, err
 	}
+	if count == 0 {
+		return []GetByParamsFilterUserResult{}, nil
+	}
+	beego.Debug("count:", count)
+
+	validateOffsetAndLimit(count, &offset, &size)
 
 	for _, requirement := range requirements {
 		history := new(History)
@@ -82,11 +101,27 @@ func GetByParamsFilterUser(params map[string]string) ([]*Requirement, error) {
 		}
 		requirement.History = append(requirement.History, history)
 	}
-
 	beego.Debug(requirements)
 
+	results := []GetByParamsFilterUserResult{}
+	result := GetByParamsFilterUserResult{}
+
+	for key, value := range requirements {
+		result.Id = value.Id
+		result.Name = value.Name
+		result.Phone = value.Phone
+		result.Email = value.Email
+		result.Company = value.Email
+		result.Requirement_content = value.Requirement_content
+		result.Create_time = value.Create_time
+		result.Remark = value.History[key].Remark
+		result.Status = value.History[key].Status
+
+		results = append(results, result)
+	}
+
 	beego.Info("end get requirement for datahub by param model.")
-	return requirements, err
+	return results, err
 }
 
 func GetByParams(params map[string]string) ([]*Requirement, error) {
@@ -177,14 +212,25 @@ func GetNewHistory(reqId int) (*History, error) {
 	return history, err
 }
 
-func GetAll() ([]*History, error) {
+func GetAll(offset int64, size int) ([]*History, error) {
 	beego.Info("begin get all requirements model.")
 
 	o := orm.NewOrm()
 	o.Using("datahub")
 
+	count, err := o.QueryTable("dh_rm_history").Filter("available__exact", "Y").Count()
+	if err != nil {
+		return nil, err
+	}
+	if count == 0 {
+		return []*History{}, nil
+	}
+	beego.Debug("count:", count)
+
+	validateOffsetAndLimit(count, &offset, &size)
+
 	var historys []*History
-	_, err := o.QueryTable("dh_rm_history").Filter("available__exact", "Y").All(&historys)
+	_, err = o.QueryTable("dh_rm_history").Filter("available__exact", "Y").Limit(size, offset).All(&historys)
 	if err != nil {
 		return nil, err
 	}
@@ -199,6 +245,20 @@ func GetAll() ([]*History, error) {
 
 	beego.Info("end get all requirements model.")
 	return historys, err
+}
+func validateOffsetAndLimit(count int64, offset *int64, limit *int) {
+	if *limit < 1 {
+		*limit = 1
+	}
+	if *offset >= count {
+		*offset = count - int64(*limit)
+	}
+	if *offset < 0 {
+		*offset = 0
+	}
+	if *offset+int64(*limit) > count {
+		*limit = int(count - *offset)
+	}
 }
 
 func Update(req *Requirement) (int64, error) {
