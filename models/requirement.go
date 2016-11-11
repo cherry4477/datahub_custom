@@ -118,7 +118,7 @@ func GetByParamsFilterUser(params map[string]string, offset int64, size int) (in
 		result.Name = value.Name
 		result.Phone = value.Phone
 		result.Email = value.Email
-		result.Company = value.Email
+		result.Company = value.Company
 		result.Requirement_content = value.Requirement_content
 		result.Create_time = value.Create_time
 		result.Remark = value.History[0].Remark
