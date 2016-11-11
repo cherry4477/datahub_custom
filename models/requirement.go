@@ -44,7 +44,6 @@ func AddOne(requirement *Requirement) (int64, error) {
 }
 
 type GetByParamsFilterUserResult struct {
-	Id                  int
 	Name                string
 	Phone               string
 	Email               string
@@ -55,7 +54,7 @@ type GetByParamsFilterUserResult struct {
 	Status              string
 }
 
-func GetByParamsFilterUser(params map[string]string, offset int64, size int) ([]GetByParamsFilterUserResult, error) {
+func GetByParamsFilterUser(params map[string]string, offset int64, size int) (int64, []GetByParamsFilterUserResult, error) {
 	beego.Info("begin get requirement for datahub by param model.")
 
 	o := orm.NewOrm()
@@ -82,22 +81,31 @@ func GetByParamsFilterUser(params map[string]string, offset int64, size int) ([]
 	if content, _ := params["content"]; content != "" {
 		qs = qs.Filter("requirement_content__icontains", content)
 	}
-	count, err := qs.All(&requirements)
+
+	count, err := qs.Count()
 	if err != nil {
-		return nil, err
+		beego.Error("Query requirement count err:", err)
+		return 0, nil, err
 	}
 	if count == 0 {
-		return []GetByParamsFilterUserResult{}, nil
+		return 0, []GetByParamsFilterUserResult{}, nil
 	}
 	beego.Debug("count:", count)
 
 	validateOffsetAndLimit(count, &offset, &size)
 
+	_, err = qs.Limit(size, offset).All(&requirements)
+	if err != nil {
+		beego.Error("Query requirements err:", err)
+		return 0, nil, err
+	}
+
 	for _, requirement := range requirements {
 		history := new(History)
-		_, err := o.QueryTable("dh_rm_history").Filter("requirement_id", requirement.Id).Filter("available__exact", "Y").All(&history)
+		_, err := o.QueryTable("dh_rm_history").Filter("requirement_id", requirement.Id).Filter("available__exact", "Y").All(history)
 		if err != nil {
-			return nil, err
+			beego.Error("Query historys err:", err)
+			return 0, nil, err
 		}
 		requirement.History = append(requirement.History, history)
 	}
@@ -106,22 +114,21 @@ func GetByParamsFilterUser(params map[string]string, offset int64, size int) ([]
 	results := []GetByParamsFilterUserResult{}
 	result := GetByParamsFilterUserResult{}
 
-	for key, value := range requirements {
-		result.Id = value.Id
+	for _, value := range requirements {
 		result.Name = value.Name
 		result.Phone = value.Phone
 		result.Email = value.Email
 		result.Company = value.Email
 		result.Requirement_content = value.Requirement_content
 		result.Create_time = value.Create_time
-		result.Remark = value.History[key].Remark
-		result.Status = value.History[key].Status
+		result.Remark = value.History[0].Remark
+		result.Status = value.History[0].Status
 
 		results = append(results, result)
 	}
 
-	beego.Info("end get requirement for datahub by param model.")
-	return results, err
+	beego.Info("End get requirement for datahub by param model.")
+	return count, results, err
 }
 
 func GetByParams(params map[string]string) ([]*Requirement, error) {

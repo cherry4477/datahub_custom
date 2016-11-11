@@ -268,13 +268,15 @@ func (this *ORequirementController) Delete() {
 
 //@router / [post]
 func (this *DRequirementController) Create() {
-	beego.Informational(this.Ctx.Request.URL, "Datahub create a requirement.")
+	beego.Informational(this.Ctx.Request.URL, "Begin datahub create a requirement.")
 
 	loginName := getLoginName(this.Controller)
 	beego.Debug("loginname:", loginName)
 	requirement := new(models.Requirement)
 	if loginName != "" {
 		requirement.Create_user = loginName
+	} else {
+		requirement.Create_user = "wangmeng"
 	}
 
 	err := json.Unmarshal(this.Ctx.Input.RequestBody, requirement)
@@ -299,6 +301,7 @@ func (this *DRequirementController) Create() {
 		return
 	}
 
+	beego.Info(this.Ctx.Request.URL, "End datahub create a requirement.")
 	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", nil)
 }
 
@@ -307,7 +310,8 @@ func (this *DRequirementController) Get() {
 	beego.Informational(this.Ctx.Request.URL, "Datahub get requirements by params.")
 
 	//this.auth()
-	loginName := getLoginName(this.Controller)
+	//loginName := getLoginName(this.Controller)
+	loginName := "wangmeng"
 
 	var name, phone, email, company, content string
 	var params = make(map[string]string)
@@ -328,14 +332,14 @@ func (this *DRequirementController) Get() {
 	offset, size := OptionalOffsetAndSize(this.Ctx.Request, 30, 1, 100)
 	beego.Debug("offset, size:", offset, size)
 
-	reqs, err := models.GetByParamsFilterUser(params, offset, size)
+	count, result, err := models.GetByParamsFilterUser(params, offset, size)
 	if err != nil {
 		beego.Error("Model, GetByParams err:", err)
 		sendResult(this.Controller, http.StatusBadRequest, ds.ErrorGetModel, err.Error(), nil)
 		return
 	}
 
-	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", reqs)
+	sendResult(this.Controller, http.StatusOK, ds.ResultOK, "OK.", NewQueryListResult(count, result))
 }
 
 func (this *ORequirementController) auth() {
