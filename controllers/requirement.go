@@ -275,8 +275,6 @@ func (this *DRequirementController) Create() {
 	requirement := new(models.Requirement)
 	if loginName != "" {
 		requirement.Create_user = loginName
-	} else {
-		requirement.Create_user = "wangmeng"
 	}
 
 	err := json.Unmarshal(this.Ctx.Input.RequestBody, requirement)
@@ -309,9 +307,9 @@ func (this *DRequirementController) Create() {
 func (this *DRequirementController) Get() {
 	beego.Informational(this.Ctx.Request.URL, "Datahub get requirements by params.")
 
-	//this.auth()
-	//loginName := getLoginName(this.Controller)
-	loginName := "wangmeng"
+	this.auth()
+	loginName := getLoginName(this.Controller)
+	//loginName := "wangmeng"
 
 	var name, phone, email, company, content string
 	var params = make(map[string]string)
